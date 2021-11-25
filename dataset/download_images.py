@@ -7,13 +7,14 @@ from queue import Queue
 
 load_dotenv(".env")
 search_url = os.getenv("CARDS_SEARCH")
+session = requests.Session()
 
 os.chdir("original")
 
 
 def getpage(page_n, queue):
     pointeur = page_n * 30
-    response = requests.get(f"{search_url}{pointeur}")
+    response = session.get(f"{search_url}{pointeur}")
     soup = BeautifulSoup(response.content, "html.parser")
     queue.put(soup)
 
@@ -23,13 +24,13 @@ def saveimg(soup, img_index):
     img_url = f'http://www.mtgpics.com{soup.select(f"#r_main{img_index} a img")[0].attrs["src"]}'
     img_url = img_url.replace("reg", "big")
 
-    img_content = requests.get(img_url).content
+    img_content = session.get(img_url).content
 
     with open(f"{title}.jpg", "wb") as image:
         image.write(img_content)
 
 
-total_pages = 804
+total_pages = 300
 pages = Queue()
 threads = [None for i in range(4)]
 
@@ -60,3 +61,5 @@ while not pages.empty():
             threads[i - 1] = t
         for t in threads:
             t.join()
+
+session.close()
